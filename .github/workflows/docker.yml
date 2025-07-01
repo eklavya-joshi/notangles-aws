@@ -100,8 +100,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}-${{ matrix.name }}:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}-${{ matrix.name }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/task-definition/TestContainer:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/task-definition/TestContainer:latest
 
   deploy:
     name: Deploy (ECS)
