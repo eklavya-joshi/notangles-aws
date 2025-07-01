@@ -117,12 +117,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          git config user.name "CSESoc CD"
-          git config user.email "technical@csesoc.org.au"
+          git config user.name "eklavya-joshi-cd"
+          git config user.email "eklavya.joshi@protonmail.com"
           git checkout -b update/${{ env.IMAGE_NAME }}/${{ github.sha }}
-          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-client:${{ github.sha }}"' projects/notangles/${{ env.ENVIRONMENT }}/deploy-frontend.yml
-          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}"' projects/notangles/${{ env.ENVIRONMENT }}/deploy-backend.yml
-          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-auto-timetabler-server:${{ github.sha }}"' projects/notangles/${{ env.ENVIRONMENT }}/deploy-auto-timetabler.yml
+          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-client:${{ github.sha }}"' notangles-aws/${{ env.ENVIRONMENT }}/deploy-frontend.yml
+          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}"' notangles-aws/${{ env.ENVIRONMENT }}/deploy-backend.yml
+          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-auto-timetabler-server:${{ github.sha }}"' notangles-aws/${{ env.ENVIRONMENT }}/deploy-auto-timetabler.yml
           git add . 
           git commit -m "feat(${{ env.IMAGE_NAME }}): update images" 
           git push -u origin update/${{ env.IMAGE_NAME }}/${{ github.sha }}
