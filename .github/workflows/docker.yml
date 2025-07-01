@@ -50,8 +50,8 @@ jobs:
             SENTRY_TRACE_RATE_CLIENT=${{ secrets.SENTRY_TRACE_RATE_CLIENT }}
             GIT_COMMIT=${{ github.sha }}
           tags: |
-            ghcr.io/devsoc-unsw/${{ env.IMAGE_NAME }}-client:${{ github.sha }}
-            ghcr.io/devsoc-unsw/${{ env.IMAGE_NAME }}-client:latest
+            ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-client:${{ github.sha }}
+            ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-client:latest
           labels: ${{ steps.meta.outputs.labels }}
   build:
     name: 'Build (${{ matrix.component }})'
@@ -93,8 +93,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            ghcr.io/devsoc-unsw/${{ env.IMAGE_NAME }}-${{ matrix.name }}:${{ github.sha }}
-            ghcr.io/devsoc-unsw/${{ env.IMAGE_NAME }}-${{ matrix.name }}:latest
+            ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-${{ matrix.name }}:${{ github.sha }}
+            ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-${{ matrix.name }}:latest
           labels: ${{ steps.meta.outputs.labels }}
   deploy:
     name: Deploy (CD)
@@ -108,7 +108,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          repository: devsoc-unsw/deployment
+          repository: eklavya-joshi/deployment
           token: ${{ secrets.GH_TOKEN }}
           ref: dev
       - name: Install yq - portable yaml processor
@@ -120,11 +120,11 @@ jobs:
           git config user.name "CSESoc CD"
           git config user.email "technical@csesoc.org.au"
           git checkout -b update/${{ env.IMAGE_NAME }}/${{ github.sha }}
-          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/devsoc-unsw/${{ env.IMAGE_NAME }}-client:${{ github.sha }}"' projects/notangles/${{ env.ENVIRONMENT }}/deploy-frontend.yml
-          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/devsoc-unsw/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}"' projects/notangles/${{ env.ENVIRONMENT }}/deploy-backend.yml
-          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/devsoc-unsw/${{ env.IMAGE_NAME }}-auto-timetabler-server:${{ github.sha }}"' projects/notangles/${{ env.ENVIRONMENT }}/deploy-auto-timetabler.yml
+          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-client:${{ github.sha }}"' projects/notangles/${{ env.ENVIRONMENT }}/deploy-frontend.yml
+          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}"' projects/notangles/${{ env.ENVIRONMENT }}/deploy-backend.yml
+          yq -i '.items[0].spec.template.spec.containers[0].image = "ghcr.io/eklavya-joshi/${{ env.IMAGE_NAME }}-auto-timetabler-server:${{ github.sha }}"' projects/notangles/${{ env.ENVIRONMENT }}/deploy-auto-timetabler.yml
           git add . 
           git commit -m "feat(${{ env.IMAGE_NAME }}): update images" 
           git push -u origin update/${{ env.IMAGE_NAME }}/${{ github.sha }}
-          gh pr create -B dev --title "feat(${{ env.IMAGE_NAME }}): update images" --body "Updates the images for the ${{ env.IMAGE_NAME }} deployment to commit devsoc-unsw/${{ env.IMAGE_NAME }}@${{ github.sha }}." > URL
+          gh pr create -B dev --title "feat(${{ env.IMAGE_NAME }}): update images" --body "Updates the images for the ${{ env.IMAGE_NAME }} deployment to commit eklavya-joshi/${{ env.IMAGE_NAME }}@${{ github.sha }}." > URL
           gh pr merge $(cat URL) --squash -d
