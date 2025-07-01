@@ -134,7 +134,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: .aws/${{ env.ENVIRONMENT }}/client-task-definition.json # Path to your client task definition JSON
-          container-name: notangles-client # Name of the client container in your task definition
+          container-name: notangles # Name of the client container in your task definition
           image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-client:${{ github.sha }}
 
       # - name: Download backend task definition
