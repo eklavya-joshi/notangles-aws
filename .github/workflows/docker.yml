@@ -9,7 +9,7 @@ env:
   ENVIRONMENT: production
   IMAGE_NAME: notangles
   AWS_REGION: ap-southeast-2
-  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-southeast-2.amazonaws.com
 
 jobs:
   build-client:
@@ -137,21 +137,21 @@ jobs:
           container-name: notangles-client # Name of the client container in your task definition
           image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-client:${{ github.sha }}
 
-      - name: Download backend task definition
-        id: backend-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: .aws/${{ env.ENVIRONMENT }}/backend-task-definition.json # Path to your backend task definition JSON
-          container-name: notangles-backend # Name of the backend container in your task definition
-          image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+      # - name: Download backend task definition
+      #   id: backend-task-def
+      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+      #   with:
+      #     task-definition: .aws/${{ env.ENVIRONMENT }}/backend-task-definition.json # Path to your backend task definition JSON
+      #     container-name: notangles-backend # Name of the backend container in your task definition
+      #     image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
 
-      - name: Download auto-timetabler task definition
-        id: auto-timetabler-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: .aws/${{ env.ENVIRONMENT }}/auto-timetabler-task-definition.json # Path to your auto-timetabler task definition JSON
-          container-name: notangles-auto-timetabler-server # Name of the auto-timetabler container
-          image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-auto-timetabler-server:${{ github.sha }}
+      # - name: Download auto-timetabler task definition
+      #   id: auto-timetabler-task-def
+      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+      #   with:
+      #     task-definition: .aws/${{ env.ENVIRONMENT }}/auto-timetabler-task-definition.json # Path to your auto-timetabler task definition JSON
+      #     container-name: notangles-auto-timetabler-server # Name of the auto-timetabler container
+      #     image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-auto-timetabler-server:${{ github.sha }}
 
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
@@ -161,18 +161,18 @@ jobs:
           cluster: notangles-cluster-${{ env.ENVIRONMENT }} # Your ECS cluster name
           wait-for-service-stability: true
 
-      - name: Deploy backend to ECS service
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.backend-task-def.outputs.task-definition }}
-          service: notangles-backend-service-${{ env.ENVIRONMENT }} # Your ECS backend service name
-          cluster: notangles-cluster-${{ env.ENVIRONMENT }} # Your ECS cluster name
-          wait-for-service-stability: true
+      # - name: Deploy backend to ECS service
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      #   with:
+      #     task-definition: ${{ steps.backend-task-def.outputs.task-definition }}
+      #     service: notangles-backend-service-${{ env.ENVIRONMENT }} # Your ECS backend service name
+      #     cluster: notangles-cluster-${{ env.ENVIRONMENT }} # Your ECS cluster name
+      #     wait-for-service-stability: true
 
-      - name: Deploy auto-timetabler to ECS service
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.auto-timetabler-task-def.outputs.task-definition }}
-          service: notangles-auto-timetabler-service-${{ env.ENVIRONMENT }} # Your ECS auto-timetabler service name
-          cluster: notangles-cluster-${{ env.ENVIRONMENT }} # Your ECS cluster name
-          wait-for-service-stability: true
+      # - name: Deploy auto-timetabler to ECS service
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      #   with:
+      #     task-definition: ${{ steps.auto-timetabler-task-def.outputs.task-definition }}
+      #     service: notangles-auto-timetabler-service-${{ env.ENVIRONMENT }} # Your ECS auto-timetabler service name
+      #     cluster: notangles-cluster-${{ env.ENVIRONMENT }} # Your ECS cluster name
+      #     wait-for-service-stability: true
