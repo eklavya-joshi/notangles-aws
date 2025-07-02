@@ -54,7 +54,7 @@ jobs:
             SENTRY_TRACE_RATE_CLIENT=${{ secrets.SENTRY_TRACE_RATE_CLIENT }}
             GIT_COMMIT=${{ github.sha }}
           tags: |
-            testrepository/notangles:latest ${{ steps.login-ecr.outputs.registry }}/testrepository/notangles:latest
+            ${{ steps.login-ecr.outputs.registry }}/testrepository/notangles:latest
 
   build:
     name: 'Build (${{ matrix.component }})'
