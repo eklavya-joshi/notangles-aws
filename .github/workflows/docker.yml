@@ -157,7 +157,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.client-task-def.outputs.task-definition }}
-          service: notangles-client-service # Your ECS client service name
+          service: notangles-client-service-new # Your ECS client service name
           cluster: notangles-cluster-client # Your ECS cluster name
           wait-for-service-stability: true
 
