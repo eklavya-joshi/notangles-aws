@@ -54,8 +54,8 @@ jobs:
             SENTRY_TRACE_RATE_CLIENT=${{ secrets.SENTRY_TRACE_RATE_CLIENT }}
             GIT_COMMIT=${{ github.sha }}
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}-client:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}-client:latest
+            ${{ steps.login-ecr.outputs.registry }}/test-repository/notangles:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/test-repository/notangles:latest
 
   build:
     name: 'Build (${{ matrix.component }})'
@@ -100,8 +100,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/task-definition/TestContainer:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/task-definition/TestContainer:latest
+            ${{ steps.login-ecr.outputs.registry }}/test-repository/notangles:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/test-repository/notangles:latest
 
   deploy:
     name: Deploy (ECS)
