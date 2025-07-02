@@ -54,7 +54,8 @@ jobs:
             SENTRY_TRACE_RATE_CLIENT=${{ secrets.SENTRY_TRACE_RATE_CLIENT }}
             GIT_COMMIT=${{ github.sha }}
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/testrepository/notangles:latest
+            ${{ steps.login-ecr.outputs.registry }}/notangles/client:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/notangles/client:latest
 
   build:
     name: 'Build (${{ matrix.component }})'
@@ -99,8 +100,8 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/testrepository/notangles:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/testrepository/notangles:latest
+            ${{ steps.login-ecr.outputs.registry }}/notangles/server:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/notangles/server:latest
 
   deploy:
     name: Deploy (ECS)
@@ -136,21 +137,21 @@ jobs:
           container-name: notangles # Name of the client container in your task definition
           image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-client:${{ github.sha }}
 
-      # - name: Download backend task definition
-      #   id: backend-task-def
-      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   with:
-      #     task-definition: .aws/${{ env.ENVIRONMENT }}/backend-task-definition.json # Path to your backend task definition JSON
-      #     container-name: notangles-backend # Name of the backend container in your task definition
-      #     image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
+      - name: Download backend task definition
+        id: backend-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: .aws/${{ env.ENVIRONMENT }}/backend-task-definition.json # Path to your backend task definition JSON
+          container-name: notangles-backend # Name of the backend container in your task definition
+          image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
 
-      # - name: Download auto-timetabler task definition
-      #   id: auto-timetabler-task-def
-      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   with:
-      #     task-definition: .aws/${{ env.ENVIRONMENT }}/auto-timetabler-task-definition.json # Path to your auto-timetabler task definition JSON
-      #     container-name: notangles-auto-timetabler-server # Name of the auto-timetabler container
-      #     image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-auto-timetabler-server:${{ github.sha }}
+      - name: Download auto-timetabler task definition
+        id: auto-timetabler-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: .aws/${{ env.ENVIRONMENT }}/auto-timetabler-task-definition.json # Path to your auto-timetabler task definition JSON
+          container-name: notangles-auto-timetabler-server # Name of the auto-timetabler container
+          image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-auto-timetabler-server:${{ github.sha }}
 
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
