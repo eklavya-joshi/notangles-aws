@@ -36,7 +36,7 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-      - name: Build and push Docker image
+      - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
           context: client
@@ -54,8 +54,8 @@ jobs:
             SENTRY_TRACE_RATE_CLIENT=${{ secrets.SENTRY_TRACE_RATE_CLIENT }}
             GIT_COMMIT=${{ github.sha }}
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/notangles/client:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/notangles/client:latest
+            ${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/notangles/client:latest
 
   terraform:
     name: Terraform Apply
@@ -85,6 +85,9 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Destroy
+        run: terraform destroy
 
       - name: Terraform Init
         run: |
@@ -155,8 +158,8 @@ jobs:
             SENTRY_TRACE_RATE_CLIENT=${{ secrets.SENTRY_TRACE_RATE_CLIENT }}
             GIT_COMMIT=${{ github.sha }}
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/notangles/client:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/notangles/client:latest
+            ${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/notangles/client:latest
 
       - name: Download client task definition
         id: client-task-def
