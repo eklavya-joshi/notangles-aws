@@ -25,7 +25,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActions-ECR-ECS-DeployRole
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -57,51 +57,55 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/notangles/client:${{ github.sha }}
             ${{ steps.login-ecr.outputs.registry }}/notangles/client:latest
 
-  build:
-    name: 'Build (${{ matrix.component }})'
+  terraform:
+    name: Terraform Apply
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        component: [server, auto_server]
-        include:
-          - component: server
-            name: backend
-          - component: auto_server
-            name: auto-timetabler-server
+    needs: [build-client]
+    defaults:
+      run:
+        working-directory: terraform
+
     permissions:
-      contents: read
-      packages: write
       id-token: write
+      contents: read
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          repository: eklavya-joshi/deployment
+          token: ${{ secrets.GH_TOKEN }}
+          ref: dev
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActions-ECR-ECS-DeployRole
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ${{ matrix.component }}
-          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/dev' }}
-          platforms: linux/amd64
-          file: ${{ matrix.component }}/Dockerfile
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ${{ steps.login-ecr.outputs.registry }}/notangles/server:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/notangles/server:latest
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init \
+          -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+          -backend-config="key=terraform.tfstate" \
+          -backend-config="region=${{ env.AWS_REGION }}"
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+        env:
+          TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+          TF_VAR_github_repo_name: ${{ github.repository }}
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        env:
+          TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+          TF_VAR_github_repo_name: ${{ github.repository }}
 
   deploy:
     name: Deploy (ECS)
@@ -126,53 +130,21 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GithubActions-ECR-ECS-DeployRole
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Download client task definition
         id: client-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: .aws/${{ env.ENVIRONMENT }}/client-task-definition.json # Path to your client task definition JSON
-          container-name: notangles # Name of the client container in your task definition
+          task-definition: .aws/${{ env.ENVIRONMENT }}/client-task-definition.json
+          container-name: notangles
           image: ${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}
-
-      # - name: Download backend task definition
-      #   id: backend-task-def
-      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   with:
-      #     task-definition: .aws/${{ env.ENVIRONMENT }}/backend-task-definition.json # Path to your backend task definition JSON
-      #     container-name: notangles-backend # Name of the backend container in your task definition
-      #     image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ github.sha }}
-
-      # - name: Download auto-timetabler task definition
-      #   id: auto-timetabler-task-def
-      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   with:
-      #     task-definition: .aws/${{ env.ENVIRONMENT }}/auto-timetabler-task-definition.json # Path to your auto-timetabler task definition JSON
-      #     container-name: notangles-auto-timetabler-server # Name of the auto-timetabler container
-      #     image: ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}-auto-timetabler-server:${{ github.sha }}
 
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.client-task-def.outputs.task-definition }}
-          service: notangles-client-service-new # Your ECS client service name
-          cluster: notangles-cluster-client # Your ECS cluster name
+          service: notangles-client-service-new
+          cluster: notangles-cluster-client
           wait-for-service-stability: true
-
-      # - name: Deploy backend to ECS service
-      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      #   with:
-      #     task-definition: ${{ steps.backend-task-def.outputs.task-definition }}
-      #     service: notangles-backend-service-${{ env.ENVIRONMENT }} # Your ECS backend service name
-      #     cluster: notangles-cluster-${{ env.ENVIRONMENT }} # Your ECS cluster name
-      #     wait-for-service-stability: true
-
-      # - name: Deploy auto-timetabler to ECS service
-      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      #   with:
-      #     task-definition: ${{ steps.auto-timetabler-task-def.outputs.task-definition }}
-      #     service: notangles-auto-timetabler-service-${{ env.ENVIRONMENT }} # Your ECS auto-timetabler service name
-      #     cluster: notangles-cluster-${{ env.ENVIRONMENT }} # Your ECS cluster name
-      #     wait-for-service-stability: true
