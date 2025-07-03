@@ -110,7 +110,7 @@ jobs:
   deploy:
     name: Deploy (ECS)
     runs-on: ubuntu-latest
-    needs: [build-client, build]
+    needs: [build-client, terraform]
     if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/dev' }}
     concurrency: production
     environment: production
