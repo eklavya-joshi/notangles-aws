@@ -24,7 +24,7 @@ jobs:
       contents: read
 
     outputs:
-      task_definition_arn: ${{ steps.get-tf-output.outputs.task_definition_arn }}
+      task_definition_family: ${{ steps.get-tf-output.outputs.task_definition_family }}
       test: ${{ steps.test-output.outputs.test }}
 
     steps:
@@ -75,8 +75,8 @@ jobs:
       - name: Get Terraform Output
         id: get-tf-output
         run: |
-          TASK_DEF_ARN=$(terraform output -raw task_definition_arn)
-          echo "task_definition_arn=$TASK_DEF_ARN" >> $GITHUB_OUTPUT
+          TASK_DEF_family=$(terraform output -raw task_definition_family)
+          echo "task_definition_family=$TASK_DEF_family" >> "$GITHUB_OUTPUT"
 
       - name: test
         id: test-output
@@ -109,7 +109,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Debug Output
-        run: echo "${{ needs.terraform.outputs.task_definition_arn }}"
+        run: echo "${{ needs.terraform.outputs.task_definition_family }}"
 
       - name: Debug Output 2
         run: echo "${{ needs.terraform.outputs.test }}"
@@ -145,7 +145,7 @@ jobs:
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ needs.terraform.outputs.task_definition_arn }}
+          task-definition: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:task-definition/${{ needs.terraform.outputs.task_definition_arn }}:latest
           service: notangles-client-service-new
           cluster: notangles-cluster-client
           wait-for-service-stability: true
