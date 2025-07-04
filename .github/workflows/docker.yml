@@ -22,18 +22,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
       - name: Build Docker image
@@ -112,6 +104,22 @@ jobs:
         env:
           TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
           TF_VAR_github_repo_name: ${{ github.repository }}
+      
+      - name: Register ECS task definition
+        id: register-task-def
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          FAMILY="${{ steps.terraform.outputs.task_definition_family }}"
+          
+          aws ecs register-task-definition \
+            --family "$FAMILY" \
+            --container-definitions "$(
+              aws ecs describe-task-definition \
+                --task-definition "$FAMILY" \
+                --query "taskDefinition.containerDefinitions" \
+                --output json | \
+              jq "map(if .name == \"notangles\" then .image = \"$ECR_REGISTRY/notangles/client:$IMAGE_TAG\" else . end)"
+            )"
 
   deploy:
     name: Push (ECR) & Deploy (ECS)
@@ -178,7 +186,7 @@ jobs:
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ steps.client-task-def.outputs.task-definition }}
+          task-definition: ${{ steps.register-task-def.outputs.task-definition }}
           service: notangles-client-service-new
           cluster: notangles-cluster-client
           wait-for-service-stability: true
