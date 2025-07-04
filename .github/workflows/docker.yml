@@ -25,6 +25,7 @@ jobs:
 
     outputs:
       task_definition_family: ${{ steps.get-tf-output.outputs.task_definition_family }}
+      client_task_definition_json: ${{ steps.get-tf-output.outputs.client_task_definition_json }}
 
     steps:
       - name: Checkout repository
@@ -76,6 +77,11 @@ jobs:
         run: |
           TASK_DEF_family=$(terraform output -raw task_definition_family)
           echo "task_definition_family=$TASK_DEF_family" >> "$GITHUB_OUTPUT"
+
+          CLIENT_TASK_DEF_JSON=$(terraform output -raw client_task_definition_json)
+          echo "client_task_definition_json<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$CLIENT_TASK_DEF_JSON" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: Push (ECR) & Deploy (ECS)
@@ -131,10 +137,16 @@ jobs:
             ${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}
             ${{ env.ECR_REGISTRY }}/notangles/client:latest
 
+      - name: Create task-definition.json
+        id: create-task-def-file
+        run: |
+          echo "${{ needs.terraform.outputs.client_task_definition_json }}" > task-definition.json
+          echo "task_definition_file=task-definition.json" >> "$GITHUB_OUTPUT"
+
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:task-definition/${{ needs.terraform.outputs.task_definition_family }}:4
+          task-definition: ${{ steps.create-task-def-file.outputs.task_definition_file }}
           service: notangles-client-service-new
           cluster: notangles-cluster-client
           wait-for-service-stability: true
