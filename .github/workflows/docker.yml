@@ -75,7 +75,12 @@ jobs:
         id: get-tf-output
         run: |
           TASK_DEFINITION_ARN=$(terraform output -raw task_definition_arn)
-          echo "task_definition_arn=$TASK_DEFINITION_ARN" >> "$GITHUB_OUTPUT"
+          echo "TASK_DEFINITION_ARN=$TASK_DEFINITION_ARN"
+          echo "task_definition_arn=$TASK_DEFINITION_ARN" >> $GITHUB_OUTPUT
+      
+      - name: Debug Output
+        run: echo "${{ needs.terraform.outputs.task_definition_arn }}"
+
       
 
   deploy:
