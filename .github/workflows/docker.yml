@@ -74,7 +74,9 @@ jobs:
         
       - name: Get Terraform Output
         id: get-tf-output
-        run: echo "task_definition_arn=$(terraform output -raw task_definition_arn)" >> "$GITHUB_OUTPUT"
+        run: |
+          TASK_DEF_ARN=$(terraform output -raw task_definition_arn)
+          echo "task_definition_arn=$TASK_DEF_ARN" >> "$GITHUB_OUTPUT"
 
       - name: test
         id: test-output
