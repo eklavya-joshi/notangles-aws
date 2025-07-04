@@ -23,6 +23,9 @@ jobs:
       id-token: write
       contents: read
 
+    outputs:
+      task_definition_arn: ${{ steps.tf-apply.outputs.task_definition_arn }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -62,11 +65,16 @@ jobs:
           TF_VAR_github_repo_name: ${{ github.repository }}
 
       - name: Terraform Apply
-        id: tf-apply
         run: terraform apply -auto-approve tfplan
         env:
           TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
           TF_VAR_github_repo_name: ${{ github.repository }}
+        
+      - name: Get Terraform Output
+        id: get-tf-output
+        run: |
+          TASK_DEFINITION_ARN=$(terraform output -raw task_definition_arn)
+          echo "task_definition_arn=$TASK_DEFINITION_ARN" >> "$GITHUB_OUTPUT"
       
 
   deploy:
@@ -126,7 +134,7 @@ jobs:
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ steps.tf-apply.outputs.task_definition_arn }}
+          task-definition: ${{ needs.terraform.outputs.task_definition_arn }}
           service: notangles-client-service-new
           cluster: notangles-cluster-client
           wait-for-service-stability: true
