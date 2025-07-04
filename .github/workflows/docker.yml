@@ -73,9 +73,7 @@ jobs:
         
       - name: Get Terraform Output
         id: get-tf-output
-        run: |
-          echo "TASK_DEFINITION_ARN=$(terraform output -raw task_definition_arn)"
-          echo "task_definition_arn=$(terraform output -raw task_definition_arn)" >> "$GITHUB_OUTPUT"
+        run: echo "task_definition_arn=$(terraform output -raw task_definition_arn)" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: Push (ECR) & Deploy (ECS)
