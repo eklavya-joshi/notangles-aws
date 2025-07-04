@@ -109,6 +109,9 @@ jobs:
       - name: Debug Output
         run: echo "${{ needs.terraform.outputs.task_definition_arn }}"
 
+      - name: Debug Output 2
+        run: echo "${{ needs.terraform.outputs.test_output }}"
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
