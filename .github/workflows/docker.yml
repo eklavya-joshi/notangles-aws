@@ -62,26 +62,12 @@ jobs:
           TF_VAR_github_repo_name: ${{ github.repository }}
 
       - name: Terraform Apply
+        id: tf-apply
         run: terraform apply -auto-approve tfplan
         env:
           TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
           TF_VAR_github_repo_name: ${{ github.repository }}
       
-      - name: Register ECS task definition
-        id: register-task-def
-        run: |
-          IMAGE_TAG=${{ github.sha }}
-          FAMILY="${{ steps.terraform.outputs.task_definition_family }}"
-          
-          aws ecs register-task-definition \
-            --family "$FAMILY" \
-            --container-definitions "$(
-              aws ecs describe-task-definition \
-                --task-definition "$FAMILY" \
-                --query "taskDefinition.containerDefinitions" \
-                --output json | \
-              jq "map(if .name == \"notangles\" then .image = \"$ECR_REGISTRY/notangles/client:$IMAGE_TAG\" else . end)"
-            )"
 
   deploy:
     name: Push (ECR) & Deploy (ECS)
@@ -137,18 +123,10 @@ jobs:
             ${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}
             ${{ env.ECR_REGISTRY }}/notangles/client:latest
 
-      - name: Download client task definition
-        id: client-task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: .aws/${{ env.ENVIRONMENT }}/client-task-definition.json
-          container-name: notangles
-          image: ${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}
-
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ steps.register-task-def.outputs.task-definition }}
+          task-definition: ${{ steps.tf-apply.outputs.task_definition_arn }}
           service: notangles-client-service-new
           cluster: notangles-cluster-client
           wait-for-service-stability: true
