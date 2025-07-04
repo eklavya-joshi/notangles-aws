@@ -110,7 +110,7 @@ jobs:
         run: echo "${{ needs.terraform.outputs.task_definition_arn }}"
 
       - name: Debug Output 2
-        run: echo "${{ needs.terraform.outputs.test_output }}"
+        run: echo "${{ needs.terraform.outputs.test }}"
 
       - name: Login to Amazon ECR
         id: login-ecr
