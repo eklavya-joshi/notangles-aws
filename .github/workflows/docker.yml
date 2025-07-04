@@ -134,7 +134,7 @@ jobs:
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:task-definition/${{ needs.terraform.outputs.task_definition_family }}:latest
+          task-definition: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:task-definition/${{ needs.terraform.outputs.task_definition_family }}:4
           service: notangles-client-service-new
           cluster: notangles-cluster-client
           wait-for-service-stability: true
