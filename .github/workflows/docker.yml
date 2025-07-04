@@ -65,6 +65,7 @@ jobs:
           TF_VAR_github_repo_name: ${{ github.repository }}
 
       - name: Terraform Apply
+        id: tf-apply
         run: terraform apply -auto-approve tfplan
         env:
           TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
