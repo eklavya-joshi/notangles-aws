@@ -25,6 +25,7 @@ jobs:
 
     outputs:
       task_definition_arn: ${{ steps.get-tf-output.outputs.task_definition_arn }}
+      test: ${{ steps.test-output.outputs.test }}
 
     steps:
       - name: Checkout repository
@@ -74,6 +75,10 @@ jobs:
       - name: Get Terraform Output
         id: get-tf-output
         run: echo "task_definition_arn=$(terraform output -raw task_definition_arn)" >> "$GITHUB_OUTPUT"
+
+      - name: test
+        id: test-output
+        run: echo "test=asdf" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: Push (ECR) & Deploy (ECS)
