@@ -25,7 +25,6 @@ jobs:
 
     outputs:
       task_definition_family: ${{ steps.get-tf-output.outputs.task_definition_family }}
-      test: ${{ steps.test-output.outputs.test }}
 
     steps:
       - name: Checkout repository
@@ -78,10 +77,6 @@ jobs:
           TASK_DEF_family=$(terraform output -raw task_definition_family)
           echo "task_definition_family=$TASK_DEF_family" >> "$GITHUB_OUTPUT"
 
-      - name: test
-        id: test-output
-        run: echo "test=asdf" >> "$GITHUB_OUTPUT"
-
   deploy:
     name: Push (ECR) & Deploy (ECS)
     runs-on: ubuntu-latest
@@ -107,12 +102,6 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.GH_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-
-      - name: Debug Output
-        run: echo "${{ needs.terraform.outputs.task_definition_family }}"
-
-      - name: Debug Output 2
-        run: echo "${{ needs.terraform.outputs.test }}"
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -145,7 +134,7 @@ jobs:
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:task-definition/${{ needs.terraform.outputs.task_definition_arn }}:latest
+          task-definition: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:task-definition/${{ needs.terraform.outputs.task_definition_family }}:latest
           service: notangles-client-service-new
           cluster: notangles-cluster-client
           wait-for-service-stability: true
