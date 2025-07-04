@@ -24,7 +24,7 @@ jobs:
       contents: read
 
     outputs:
-      task_definition_arn: ${{ steps.tf-apply.outputs.task_definition_arn }}
+      task_definition_arn: ${{ steps.get-tf-output.outputs.task_definition_arn }}
 
     steps:
       - name: Checkout repository
