@@ -157,3 +157,14 @@ jobs:
           service: notangles-client-service-terraform
           cluster: notangles-cluster-client-terraform
           wait-for-service-stability: true
+
+      - name: Update Cloudflare DNS Record
+        uses: cloudflare/cloudflare-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          zoneId: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          type: CNAME
+          recordName: eklavya-joshi.com
+          content: ${{ needs.terraform.outputs.client_alb_dns_name }}
+          ttl: 300
+          proxied: true
