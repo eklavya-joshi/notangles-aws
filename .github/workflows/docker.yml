@@ -24,8 +24,7 @@ jobs:
       contents: read
 
     outputs:
-      task_definition_family: ${{ steps.get-tf-output.outputs.task_definition_family }}
-      client_task_definition_json: ${{ steps.get-tf-output.outputs.client_task_definition_json }}
+      client_alb_dns_name: ${{ steps.get-tf-output.outputs.client_alb_dns_name }}
 
     steps:
       - name: Checkout repository
@@ -75,13 +74,8 @@ jobs:
       - name: Get Terraform Output
         id: get-tf-output
         run: |
-          TASK_DEF_family=$(terraform output -raw task_definition_family)
-          echo "task_definition_family=$TASK_DEF_family" >> "$GITHUB_OUTPUT"
-
-          CLIENT_TASK_DEF_JSON=$(terraform output -raw client_task_definition_json)
-          echo "client_task_definition_json<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$CLIENT_TASK_DEF_JSON" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          CLIENT_ALB_DNS_NAME=$(terraform output -raw client_alb_dns_name)
+          echo "client_alb_dns_name=$CLIENT_ALB_DNS_NAME" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: Push (ECR) & Deploy (ECS)
