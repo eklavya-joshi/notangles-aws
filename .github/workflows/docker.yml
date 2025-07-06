@@ -140,7 +140,6 @@ jobs:
           tags: |
             ${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}
             ${{ env.ECR_REGISTRY }}/notangles/client:latest
-            echo "IMAGE_URI=${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}" >> $GITHUB_OUTPUT
 
       # - name: Create task-definition.json
       #   id: create-task-def-file
@@ -161,7 +160,7 @@ jobs:
         with:
           task-definition: taskDefinition.json
           container-name: ${{ secrets.AWS_ECS_CONTAINER_NAME }}
-          image: ${{ steps.build-and-tag-docker-image.outputs.IMAGE_URI }}
+          image: ${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}
 
       - name: Deploy client to ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
