@@ -160,6 +160,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.update-task-def.outputs.task-definition }}
-          service: notangles-client-service-new
-          cluster: notangles-cluster-client
+          service: notangles-client-service-terraform
+          cluster: notangles-cluster-client-terraform
           wait-for-service-stability: true
