@@ -63,6 +63,7 @@ jobs:
         env:
           TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
           TF_VAR_github_repo_name: ${{ github.repository }}
+          TF_VAR_alb_certificate: ${{ secrets.ALB_CERTIFICATE }}
 
       - name: Terraform Apply
         id: tf-apply
@@ -70,6 +71,7 @@ jobs:
         env:
           TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
           TF_VAR_github_repo_name: ${{ github.repository }}
+          TF_VAR_alb_certificate: ${{ secrets.ALB_CERTIFICATE }}
         
       - name: Get Terraform Output
         id: get-tf-output
@@ -134,6 +136,15 @@ jobs:
           tags: |
             ${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}
             ${{ env.ECR_REGISTRY }}/notangles/client:latest
+
+      - name: Run Trivy vulnerability scan on Docker image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.ECR_REGISTRY }}/notangles/client:${{ github.sha }}'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
 
       - name: Download task definition
         run: |
