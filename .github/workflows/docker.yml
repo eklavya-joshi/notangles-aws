@@ -161,7 +161,7 @@ jobs:
       - uses: infraway/create-dns-record@v2.0
         with:
           type: "CNAME"
-          name: "eklavya-joshi.com"
+          name: "notangles.eklavya-joshi.com"
           content: ${{ needs.terraform.outputs.client_alb_dns_name }}
           ttl: 3600
           proxied: true
