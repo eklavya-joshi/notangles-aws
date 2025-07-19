@@ -169,7 +169,8 @@ jobs:
           cluster: notangles-cluster-client-terraform
           wait-for-service-stability: true
 
-      - uses: infraway/create-dns-record@v2.0
+      - name: Create Cloudflare DNS Record
+        uses: infraway/create-dns-record@v2.0
         with:
           type: "CNAME"
           name: "notangles.eklavya-joshi.com"
