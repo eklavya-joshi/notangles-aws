@@ -96,7 +96,7 @@ resource "aws_lb_listener" "https_listener" {
   port              = 443
   protocol          = "HTTPS"
 
-  certificate_arn   = var.alb_certificate
+  certificate_arn = var.alb_certificate
 
   default_action {
     type             = "forward"
@@ -112,7 +112,7 @@ resource "aws_ecs_service" "client" {
   desired_count   = 1
 
   network_configuration {
-    subnets         = var.subnet_ids
+    subnets          = var.subnet_ids
     assign_public_ip = true
     security_groups  = [var.security_group_id]
   }

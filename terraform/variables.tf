@@ -1,11 +1,11 @@
 variable "project_name" {
-  type        = string
-  default     = "notangles"
+  type    = string
+  default = "notangles"
 }
 
 variable "environment" {
-  type        = string
-  default     = "production"
+  type    = string
+  default = "production"
 }
 
 variable "aws_account_id" {

@@ -3,9 +3,9 @@ variable "project_name" {
 }
 
 variable "aws_account_id" {
-  type        = string
+  type = string
 }
 
 variable "github_repo_name" {
-  type        = string
+  type = string
 }
